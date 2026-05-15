@@ -8,9 +8,10 @@ import PublicRoute from "../src/routes/PublicRoute";
 import DashboardLayout from './components/DashboardLayout';
 import Profile from './pages/Profile';
 import Tasks from './pages/Tasks';
+import Users from './pages/Users';
 
 function App() {
-   const router = createBrowserRouter([
+  const router = createBrowserRouter([
     {
       path: "/login",
       element: (
@@ -21,21 +22,22 @@ function App() {
     },
     {
       path: "/",
-        element: (
-          <PrivateRoute>
-            <DashboardLayout />
-          </PrivateRoute>
-        ),
-        children: [
-          {path: "dashboard", element: (<Dashboard />)},
-          {path: "tasks", element: (<Tasks />)},
-          {path: "profile", element: (<Profile />)},
-        ]
+      element: (
+        <PrivateRoute>
+          <DashboardLayout />
+        </PrivateRoute>
+      ),
+      children: [
+        { path: "dashboard", element: (<Dashboard />) },
+        { path: "tasks", element: (<Tasks />) },
+        { path: "users", element: (<Users />) },
+        { path: "profile", element: (<Profile />) },
+      ]
     },
     {
       path: "/",
       element: (
-          <Login />
+        <Login />
       ),
     },
   ]);

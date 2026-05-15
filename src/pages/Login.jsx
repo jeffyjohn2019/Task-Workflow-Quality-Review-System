@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaUser, FaLock, FaEnvelope, FaIdBadge, FaTasks } from "react-icons/fa";
+import { FiCamera } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
-import { registerUser, loginUser } from "../redux/authSlice";
+import { registerUser } from "../redux/authSlice";
 
 
 function Login() {
@@ -16,8 +17,8 @@ function Login() {
 
   // Login Form State
   const [loginData, setLoginData] = useState({
-    email: "",
-    password: "",
+    username: "admin",
+    password: "admin123",
   });
 
   // Signup Form State
@@ -38,11 +39,9 @@ function Login() {
   // LOGIN VALIDATION
   const validateLogin = () => {
     let newErrors = {};
-console.log("loginData ", loginData)
-    if (!loginData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!isValidEmail(loginData.email)) {
-      newErrors.email = "Enter a valid email";
+    console.log("loginData ", loginData)
+    if (!loginData.username.trim()) {
+      newErrors.username = "Username is required";
     }
 
     if (!loginData.password.trim()) {
@@ -58,7 +57,7 @@ console.log("loginData ", loginData)
   // SIGNUP VALIDATION
   const validateSignup = () => {
     let newErrors = {};
-console.log("signupData ", signupData)
+    console.log("signupData ", signupData)
     if (!signupData.fullName.trim()) {
       newErrors.fullName = "Full Name is required";
     }
@@ -88,20 +87,20 @@ console.log("signupData ", signupData)
     e.preventDefault();
 
     if (!validateLogin()) return;
-console.log("users ", users)
+    console.log("users ", users)
     const userFound = users.find(
       (u) =>
-        u.email === loginData.email && u.password === loginData.password
+        (u.username === loginData.username || u.fullName === loginData.username || u.email === loginData.username) && u.password === loginData.password
     );
 
     if (!userFound) {
-      toast.error("Invalid email or password");
+      toast.error("Invalid username or password");
       return;
     }
     localStorage.setItem("token", "mytoken123");
     toast.success("Successfully logged in ");
     setLoginData({
-      email: "",
+      username: "",
       password: "",
     });
 
@@ -113,9 +112,9 @@ console.log("users ", users)
     e.preventDefault();
 
     if (!validateSignup()) return;
-    
+
     const userExists = users.find((u) => u.email === signupData.email);
-console.log("userExists ", userExists)
+    console.log("userExists ", userExists)
     if (userExists) {
       setErrors({ email: "Email already registered" });
       return;
@@ -141,83 +140,91 @@ console.log("userExists ", userExists)
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-6">
-        <h2 className="text-2xl font-bold text-center mb-2 text-gray-800">
-          {isSignup ? "Create Account" : "Login"}
-        </h2>
+    <div className="min-h-screen flex justify-center items-center bg-[#eaf1f8] px-4 font-sans relative overflow-hidden">
+      {/* Decorative background glass elements */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-        <p className="text-center text-gray-500 mb-6 text-sm">
-          {isSignup
-            ? "Fill the details to create a new account"
-            : "Enter your email and password to login"}
-        </p>
+      <div className="w-full max-w-[380px] bg-[#1a2b4cd9] bg-opacity-40 backdrop-blur-md border border-white/10 shadow-[0_0_15px_rgba(50,150,255,0.15)] rounded-3xl p-8 z-10 relative overflow-hidden text-white mx-auto">
+        {/* Subtle glowing border accent */}
+        <div className="absolute top-0 left-10 w-32 h-[1px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
+        <div className="absolute bottom-20 -left-[1px] w-[2px] h-20 bg-gradient-to-b from-transparent via-cyan-400 to-transparent shadow-[0_0_10px_rgba(34,211,238,0.8)]"></div>
+
+        {/* Top Icon */}
+        <div className="flex justify-center mb-8">
+          <div className="h-[88px] w-[88px] rounded-full border-[1.5px] border-cyan-400/80 flex justify-center items-center shadow-[inset_0_0_8px_rgba(34,211,238,0.3)]">
+            <FaTasks className="text-cyan-400 text-3xl" />
+          </div>
+        </div>
 
         {/* LOGIN FORM */}
         {!isSignup && (
           <form onSubmit={handleLogin} className="space-y-4">
-            {/* Email */}
+            {/* Username */}
             <div>
-              <label className="text-gray-700 font-medium">Email</label>
-              <input
-                type="email"
-                value={loginData.email}
-                onChange={(e) => {
-                  setLoginData({ ...loginData, email: e.target.value });
-                  setErrors({ ...errors, email: "" });
-                }}
-                className={`w-full mt-1 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 ${
-                  errors.email
-                    ? "border-red-500 focus:ring-red-400"
-                    : "focus:ring-blue-400"
-                }`}
-                placeholder="Enter email"
-              />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              <div className="relative flex items-center bg-white rounded-md overflow-hidden border border-gray-200 focus-within:border-blue-500 transition-all">
+                <div className="px-4 text-gray-500">
+                  <FaUser size={14} />
+                </div>
+                <input
+                  type="text"
+                  value={loginData.username}
+                  onChange={(e) => {
+                    setLoginData({ ...loginData, username: e.target.value });
+                    setErrors({ ...errors, username: "" });
+                  }}
+                  className="w-full py-[10px] text-sm bg-transparent text-black placeholder-gray-500 focus:outline-none tracking-wide"
+                  placeholder="Username"
+                />
+              </div>
+              {errors.username && (
+                <p className="text-red-400 text-sm mt-1 ml-1">{errors.username}</p>
               )}
             </div>
 
             {/* Password */}
-            <div className="relative">
-              <label className="text-gray-700 font-medium">Password</label>
-              <input
-                type={showPassword ? "text" : "password"}
-                value={loginData.password}
-                onChange={(e) => {
-                  setLoginData({ ...loginData, password: e.target.value });
-                  setErrors({ ...errors, password: "" });
-                }}
-                className={`w-full mt-1 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 ${
-                  errors.password
-                    ? "border-red-500 focus:ring-red-400"
-                    : "focus:ring-blue-400"
-                }`}
-                placeholder="Enter password"
-              />
+            <div>
+              <div className="relative flex items-center bg-white rounded-md overflow-hidden border border-gray-200 focus-within:border-blue-500 transition-all">
+                <div className="px-4 text-gray-500">
+                  <FaLock size={14} />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={loginData.password}
+                  onChange={(e) => {
+                    setLoginData({ ...loginData, password: e.target.value });
+                    setErrors({ ...errors, password: "" });
+                  }}
+                  className="w-full py-[10px] text-sm bg-transparent text-black placeholder-gray-500 focus:outline-none pr-10 tracking-[0.2em]"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 text-gray-500 hover:text-black transition-colors"
+                >
+                  {showPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
+                </button>
+              </div>
               {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                <p className="text-red-400 text-sm mt-1 ml-1">{errors.password}</p>
               )}
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-12 -translate-y-1/2 text-gray-600 hover:text-gray-900"
-              >
-                {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
-              </button>
             </div>
 
+
+            {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-2 rounded-xl font-semibold hover:bg-blue-700 transition"
+              className="w-full mt-2 bg-gradient-to-r from-[#0d4f90] via-[#0b427b] to-[#042654] hover:from-[#115aa3] hover:to-[#073066] border border-[#1e6ac5]/40 text-white font-bold tracking-[0.1em] text-xs py-3 rounded-[4px] shadow-[0_4px_15px_rgba(13,79,144,0.3)] transition-all duration-300"
             >
-              Login
+              LOGIN
             </button>
 
-            <p className="text-center text-sm text-gray-600 mt-3">
+            {/* Switch to Signup */}
+            {/* <p className="text-center text-sm text-gray-400 mt-6 tracking-wide">
               Don’t have an account?{" "}
               <span
-                className="text-blue-600 font-semibold cursor-pointer hover:underline"
+                className="text-cyan-400 font-semibold cursor-pointer hover:underline hover:text-cyan-300 transition-colors"
                 onClick={() => {
                   setIsSignup(true);
                   setErrors({});
@@ -232,7 +239,7 @@ console.log("userExists ", userExists)
               >
                 Sign Up
               </span>
-            </p>
+            </p> */}
           </form>
         )}
 
@@ -241,120 +248,123 @@ console.log("userExists ", userExists)
           <form onSubmit={handleSignup} className="space-y-4">
             {/* Full Name */}
             <div>
-              <label className="text-gray-700 font-medium">Full Name</label>
-              <input
-                type="text"
-                value={signupData.fullName}
-                onChange={(e) => {
-                  setSignupData({ ...signupData, fullName: e.target.value });
-                  setErrors({ ...errors, fullName: "" });
-                }}
-                className={`w-full mt-1 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 ${
-                  errors.fullName
-                    ? "border-red-500 focus:ring-red-400"
-                    : "focus:ring-blue-400"
-                }`}
-                placeholder="Enter name"
-              />
+              <div className="relative flex items-center bg-white rounded-md overflow-hidden border border-gray-200 focus-within:border-blue-500 transition-all">
+                <div className="px-4 text-gray-500">
+                  <FaUser size={14} />
+                </div>
+                <input
+                  type="text"
+                  value={signupData.fullName}
+                  onChange={(e) => {
+                    setSignupData({ ...signupData, fullName: e.target.value });
+                    setErrors({ ...errors, fullName: "" });
+                  }}
+                  className="w-full py-[10px] text-sm bg-transparent text-black placeholder-gray-500 focus:outline-none tracking-wide"
+                  placeholder="Full Name"
+                />
+              </div>
               {errors.fullName && (
-                <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
+                <p className="text-red-400 text-sm mt-1 ml-1">{errors.fullName}</p>
               )}
             </div>
 
             {/* Email */}
             <div>
-              <label className="text-gray-700 font-medium">Email</label>
-              <input
-                type="email"
-                value={signupData.email}
-                onChange={(e) => {
-                  setSignupData({ ...signupData, email: e.target.value });
-                  setErrors({ ...errors, email: "" });
-                }}
-                className={`w-full mt-1 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 ${
-                  errors.email
-                    ? "border-red-500 focus:ring-red-400"
-                    : "focus:ring-blue-400"
-                }`}
-                placeholder="Enter email"
-              />
+              <div className="relative flex items-center bg-white rounded-md overflow-hidden border border-gray-200 focus-within:border-blue-500 transition-all">
+                <div className="px-4 text-gray-500">
+                  <FaEnvelope size={14} />
+                </div>
+                <input
+                  type="email"
+                  value={signupData.email}
+                  onChange={(e) => {
+                    setSignupData({ ...signupData, email: e.target.value });
+                    setErrors({ ...errors, email: "" });
+                  }}
+                  className="w-full py-[10px] text-sm bg-transparent text-black placeholder-gray-500 focus:outline-none tracking-wide"
+                  placeholder="Email"
+                />
+              </div>
               {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                <p className="text-red-400 text-sm mt-1 ml-1">{errors.email}</p>
               )}
             </div>
 
             {/* Role */}
             <div>
-              <label className="text-gray-700 font-medium">Role</label>
-              <select
-                value={signupData.role}
-                onChange={(e) => {
-                  setSignupData({ ...signupData, role: e.target.value });
-                  setErrors({ ...errors, role: "" });
-                }}
-                className={`w-full mt-1 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 ${
-                  errors.role
-                    ? "border-red-500 focus:ring-red-400"
-                    : "focus:ring-blue-400"
-                }`}
-              >
-                <option value="">Select Role</option>
-                <option value="Admin">Admin</option>
-                <option value="Worker">Worker</option>
-                <option value="Reviewer">Reviewer</option>
-              </select>
-
+              <div className="relative flex items-center bg-white rounded-md overflow-hidden border border-gray-200 focus-within:border-blue-500 transition-all text-sm">
+                <div className="px-4 text-gray-500">
+                  <FaIdBadge size={14} />
+                </div>
+                <select
+                  value={signupData.role}
+                  onChange={(e) => {
+                    setSignupData({ ...signupData, role: e.target.value });
+                    setErrors({ ...errors, role: "" });
+                  }}
+                  className="w-full py-[10px] text-sm bg-transparent text-black focus:outline-none appearance-none"
+                >
+                  <option value="" className="bg-white text-gray-500">Select Role</option>
+                  <option value="Admin" className="bg-white text-black">Admin</option>
+                  <option value="Worker" className="bg-white text-black">Worker</option>
+                  <option value="Reviewer" className="bg-white text-black">Reviewer</option>
+                </select>
+                {/* Custom dropdown arrow to match theme */}
+                <div className="absolute right-4 pointer-events-none text-gray-500">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+              </div>
               {errors.role && (
-                <p className="text-red-500 text-sm mt-1">{errors.role}</p>
+                <p className="text-red-400 text-sm mt-1 ml-1">{errors.role}</p>
               )}
             </div>
 
             {/* Password */}
-            <div className="relative">
-              <label className="text-gray-700 font-medium">Password</label>
-              <input
-                type={showPasswordRegister ? "text" : "password"}
-                value={signupData.password}
-                onChange={(e) => {
-                  setSignupData({ ...signupData, password: e.target.value });
-                  setErrors({ ...errors, password: "" });
-                }}
-                className={`w-full mt-1 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 ${
-                  errors.password
-                    ? "border-red-500 focus:ring-red-400"
-                    : "focus:ring-blue-400"
-                }`}
-                placeholder="Enter password"
-              />
-              <button
-              type="button"
-              onClick={() => setShowPasswordRegister(!showPasswordRegister)}
-              className="absolute right-3 top-12 -translate-y-1/2 text-gray-600 hover:text-gray-900"
-            >
-              {showPasswordRegister ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
-            </button>
+            <div>
+              <div className="relative flex items-center bg-white rounded-md overflow-hidden border border-gray-200 focus-within:border-blue-500 transition-all">
+                <div className="px-4 text-gray-500">
+                  <FaLock size={14} />
+                </div>
+                <input
+                  type={showPasswordRegister ? "text" : "password"}
+                  value={signupData.password}
+                  onChange={(e) => {
+                    setSignupData({ ...signupData, password: e.target.value });
+                    setErrors({ ...errors, password: "" });
+                  }}
+                  className="w-full py-[10px] text-sm bg-transparent text-black placeholder-gray-500 focus:outline-none pr-10 tracking-[0.2em]"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordRegister(!showPasswordRegister)}
+                  className="absolute right-4 text-gray-500 hover:text-black transition-colors"
+                >
+                  {showPasswordRegister ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
+                </button>
+              </div>
               {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                <p className="text-red-400 text-sm mt-1 ml-1">{errors.password}</p>
               )}
             </div>
 
             <button
               type="submit"
-              className="w-full bg-green-600 text-white py-2 rounded-xl font-semibold hover:bg-green-700 transition"
+              className="w-full mt-4 bg-gradient-to-r from-[#0d4f90] via-[#0b427b] to-[#042654] hover:from-[#115aa3] hover:to-[#073066] border border-[#1e6ac5]/40 text-white font-bold tracking-[0.1em] text-xs py-3 rounded-[4px] shadow-[0_4px_15px_rgba(13,79,144,0.3)] transition-all duration-300"
             >
-              Register
+              REGISTER
             </button>
 
-            <p className="text-center text-sm text-gray-600 mt-3">
+            <p className="text-center text-sm text-gray-400 mt-6 tracking-wide">
               Already have an account?{" "}
               <span
-                className="text-blue-600 font-semibold cursor-pointer hover:underline"
+                className="text-cyan-400 font-semibold cursor-pointer hover:underline hover:text-cyan-300 transition-colors"
                 onClick={() => {
                   setIsSignup(false);
                   setErrors({});
                   setShowPassword(false);
                   setLoginData({
-                    email: "",
+                    username: "",
                     password: "",
                   });
                 }}
