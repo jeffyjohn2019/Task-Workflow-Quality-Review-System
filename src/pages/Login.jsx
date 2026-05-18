@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { FaEye, FaEyeSlash, FaUser, FaLock, FaEnvelope, FaIdBadge, FaTasks } from "react-icons/fa";
 import { FiCamera } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
-import { registerUser } from "../redux/authSlice";
+import { registerUser, loginUser } from "../redux/authSlice";
 
 
 function Login() {
@@ -97,6 +97,8 @@ function Login() {
       toast.error("Invalid username or password");
       return;
     }
+
+    dispatch(loginUser(userFound));
     localStorage.setItem("token", "mytoken123");
     toast.success("Successfully logged in ");
     setLoginData({
@@ -120,14 +122,15 @@ function Login() {
       return;
     }
 
-    dispatch(
-      registerUser({
-        fullName: signupData.fullName,
-        email: signupData.email,
-        role: signupData.role,
-        password: signupData.password,
-      })
-    );
+    const newUser = {
+      fullName: signupData.fullName,
+      email: signupData.email,
+      role: signupData.role,
+      password: signupData.password,
+    };
+    dispatch(registerUser(newUser));
+    dispatch(loginUser(newUser));
+
     localStorage.setItem("token", "mytoken123");
     toast.success("Successfully registered ");
     setSignupData({
