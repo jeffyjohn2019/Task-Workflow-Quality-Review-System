@@ -18,6 +18,16 @@ const authSlice = createSlice({
         registerUser: (state, action) => {
             state.users.push(action.payload);
         },
+        updateUser: (state, action) => {
+            const index = state.users.findIndex(u => u.email === action.payload.originalEmail || u.email === action.payload.email);
+            if (index !== -1) {
+                const { originalEmail, ...updatedUser } = action.payload;
+                state.users[index] = updatedUser;
+            }
+        },
+        deleteUser: (state, action) => {
+            state.users = state.users.filter(u => u.email !== action.payload);
+        },
         loginUser: (state, action) => {
             state.loggedInUser = action.payload;
         },
@@ -27,5 +37,5 @@ const authSlice = createSlice({
     },
 });
 
-export const { registerUser, loginUser, logoutUser } = authSlice.actions;
+export const { registerUser, updateUser, deleteUser, loginUser, logoutUser } = authSlice.actions;
 export default authSlice.reducer;
