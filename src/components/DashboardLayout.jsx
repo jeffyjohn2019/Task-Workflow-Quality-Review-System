@@ -22,6 +22,56 @@ function DashboardLayout() {
     `block px-4 py-2 rounded-lg font-medium transition ${isActive ? "bg-[#263f6e] text-white" : "text-gray-200 hover:bg-[#0f192d]"
     }`;
 
+  const role = loggedInUser?.role;
+
+  const getNavLinks = () => {
+    switch (role) {
+      case "Admin":
+        return (
+          <>
+            <NavLink to="/dashboard" className={menuClass}>Dashboard</NavLink>
+            <NavLink to="/admin-dashboard" className={menuClass}>Admin Panel</NavLink>
+            <NavLink to="/tasks" className={menuClass}>Tasks</NavLink>
+            <NavLink to="/users" className={menuClass}>Users</NavLink>
+            <NavLink to="/profile" className={menuClass}>Profile</NavLink>
+          </>
+        );
+      case "Worker":
+        return (
+          <>
+            <NavLink to="/worker-dashboard" className={menuClass}>My Tasks</NavLink>
+            <NavLink to="/profile" className={menuClass}>Profile</NavLink>
+          </>
+        );
+      case "Reviewer":
+        return (
+          <>
+            <NavLink to="/reviewer-dashboard" className={menuClass}>Reviews</NavLink>
+            <NavLink to="/profile" className={menuClass}>Profile</NavLink>
+          </>
+        );
+      default:
+        return (
+          <>
+            <NavLink to="/dashboard" className={menuClass}>Dashboard</NavLink>
+            <NavLink to="/tasks" className={menuClass}>Tasks</NavLink>
+            <NavLink to="/users" className={menuClass}>Users</NavLink>
+            <NavLink to="/profile" className={menuClass}>Profile</NavLink>
+          </>
+        );
+    }
+  };
+
+  const roleBadge = role ? (
+    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${role === "Admin" ? "bg-amber-500/20 text-amber-300" :
+        role === "Worker" ? "bg-blue-500/20 text-blue-300" :
+          role === "Reviewer" ? "bg-purple-500/20 text-purple-300" :
+            "bg-gray-500/20 text-gray-300"
+      }`}>
+      {role}
+    </span>
+  ) : null;
+
   return (
     <div className="min-h-screen flex bg-[#f4f2f5]">
       {/* Sidebar */}
@@ -31,22 +81,7 @@ function DashboardLayout() {
         </div>
 
         <nav className="p-4 space-y-2 mt-4">
-          <NavLink to="/dashboard" className={menuClass}>
-            Dashboard
-          </NavLink>
-
-          <NavLink to="/tasks" className={menuClass}>
-            Tasks
-          </NavLink>
-
-          <NavLink to="/users" className={menuClass}>
-            Users
-          </NavLink>
-
-          <NavLink to="/profile" className={menuClass}>
-            Profile
-          </NavLink>
-
+          {getNavLinks()}
         </nav>
       </aside>
 
@@ -58,6 +93,7 @@ function DashboardLayout() {
             <div className="flex items-center space-x-3 bg-[#0f192d] px-4 py-1.5 rounded-full shadow-inner border border-[#263f6e]">
               <FaUserCircle className="text-2xl text-cyan-200" />
               <span className="font-semibold tracking-wide text-sm">{loggedInUser?.fullName || "admin"}</span>
+              {roleBadge}
             </div>
 
             <button

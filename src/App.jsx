@@ -9,6 +9,11 @@ import DashboardLayout from './components/DashboardLayout';
 import Profile from './pages/Profile';
 import Tasks from './pages/Tasks';
 import Users from './pages/Users';
+import AdminDashboard from './pages/AdminDashboard';
+import WorkerDashboard from './pages/WorkerDashboard';
+import TaskDetails from './pages/TaskDetails';
+import ReviewerDashboard from './pages/ReviewerDashboard';
+import ReviewPanel from './pages/ReviewPanel';
 
 function App() {
   const router = createBrowserRouter([
@@ -32,6 +37,11 @@ function App() {
         { path: "tasks", element: (<Tasks />) },
         { path: "users", element: (<Users />) },
         { path: "profile", element: (<Profile />) },
+        { path: "admin-dashboard", element: (<AdminDashboard />) },
+        { path: "worker-dashboard", element: (<WorkerDashboard />) },
+        { path: "task-details/:taskId", element: (<TaskDetails />) },
+        { path: "reviewer-dashboard", element: (<ReviewerDashboard />) },
+        { path: "review-panel/:taskId", element: (<ReviewPanel />) },
       ]
     },
     {
