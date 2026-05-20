@@ -1,9 +1,28 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { addTask, updateTask, deleteTask } from '../redux/tasksSlice';
-import { FaPlus, FaEdit, FaTrash, FaListUl, FaImage, FaLink, FaBold, FaItalic, FaStrikethrough, FaCode, FaPaperclip } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaPaperclip, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import ConfirmModal from '../components/ConfirmModal';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
+
+const quillModules = {
+  toolbar: [
+    [{ 'header': [1, 2, false] }],
+    ['bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block'],
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    ['link', 'image'],
+    ['clean']
+  ],
+};
+
+const quillFormats = [
+  'header',
+  'bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block',
+  'list', 'bullet',
+  'link', 'image'
+];
 
 function Tasks() {
   const [isAddTask, setIsAddTask] = useState(false);
@@ -13,6 +32,10 @@ function Tasks() {
   const users = useSelector((state) => state.auth.users);
   const tasks = useSelector((state) => state.tasks.tasks);
   const dispatch = useDispatch();
+
+  const [sortField, setSortField] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc');
+  const [inlineEdit, setInlineEdit] = useState({ taskId: null, field: null });
 
   const [taskData, setTaskData] = useState({
     name: "",
@@ -28,14 +51,15 @@ function Tasks() {
     category: "",
     version: "",
     priority: "Normal",
+    status: "New",
     budget: "",
     attachments: []
   });
 
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [searchQuery, setSearchQuery] = useState({ name: "", assignee: "", priority: "" });
-  const [appliedQuery, setAppliedQuery] = useState({ name: "", assignee: "", priority: "" });
+  const [searchQuery, setSearchQuery] = useState({ name: "", assignee: "", priority: "", status: "" });
+  const [appliedQuery, setAppliedQuery] = useState({ name: "", assignee: "", priority: "", status: "" });
 
   // Handle Edit
   const handleEditTask = (task) => {
@@ -53,6 +77,7 @@ function Tasks() {
       category: task.category,
       version: task.version,
       priority: task.priority,
+      status: task.status || "New",
       budget: task.budget,
       attachments: task.attachments || []
     });
@@ -120,6 +145,7 @@ function Tasks() {
       category: "",
       version: "",
       priority: "Normal",
+      status: "New",
       budget: "",
       attachments: []
     });
@@ -129,10 +155,65 @@ function Tasks() {
     const matchName = task.name?.toLowerCase().includes(appliedQuery.name.toLowerCase()) ?? false;
     const matchAssignee = appliedQuery.assignee ? task.assignee === appliedQuery.assignee : true;
     const matchPriority = appliedQuery.priority ? task.priority === appliedQuery.priority : true;
-    return matchName && matchAssignee && matchPriority;
+    const matchStatus = appliedQuery.status ? task.status === appliedQuery.status : true;
+    return matchName && matchAssignee && matchPriority && matchStatus;
   });
 
-  const currentTasks = filteredTasks.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const renderSortIcon = (field) => {
+    if (sortField !== field) {
+      return <FaSort className="text-gray-300 ml-1 inline-block hover:text-gray-500 transition-colors" size={12} />;
+    }
+    if (sortDirection === 'asc') {
+      return <FaSortUp className="text-[#1a2b4c] ml-1 inline-block" size={12} />;
+    }
+    return <FaSortDown className="text-[#1a2b4c] ml-1 inline-block" size={12} />;
+  };
+
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
+    if (!sortField) return 0;
+    let aVal = a[sortField];
+    let bVal = b[sortField];
+
+    if (sortField === 'id') {
+      aVal = Number(a.id) || 0;
+      bVal = Number(b.id) || 0;
+    } else if (sortField === 'name') {
+      aVal = (a.name || "").toLowerCase();
+      bVal = (b.name || "").toLowerCase();
+    } else if (sortField === 'assignee') {
+      aVal = (a.assignee || "").toLowerCase();
+      bVal = (b.assignee || "").toLowerCase();
+    } else if (sortField === 'priority') {
+      const priorityRank = { "High": 3, "Normal": 2, "Low": 1 };
+      aVal = priorityRank[a.priority] || 0;
+      bVal = priorityRank[b.priority] || 0;
+    } else if (sortField === 'estimatedTime') {
+      aVal = Number(a.estimatedTime) || 0;
+      bVal = Number(b.estimatedTime) || 0;
+    } else if (sortField === 'startDate') {
+      aVal = a.startDate || "";
+      bVal = b.startDate || "";
+    } else if (sortField === 'status') {
+      const statusRank = { "New": 1, "In Progress": 2, "In Review": 3, "Reviewed": 4, "Completed": 5 };
+      aVal = statusRank[a.status] || 0;
+      bVal = statusRank[b.status] || 0;
+    }
+
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const currentTasks = sortedTasks.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   if (isAddTask) {
     return (
@@ -157,31 +238,16 @@ function Tasks() {
               />
             </div>
 
-            {/* Rich Text Editor Mockup */}
-            <div className="border border-gray-300 rounded bg-white">
-              <div className="bg-gray-50 border-b border-gray-300 px-3 py-2 flex items-center space-x-4 text-gray-600">
-                <select className="bg-transparent border-none text-gray-600 focus:outline-none text-sm">
-                  <option>Paragraph</option>
-                  <option>Heading 1</option>
-                  <option>Heading 2</option>
-                </select>
-                <div className="h-4 w-px bg-gray-300"></div>
-                <button type="button" className="hover:text-black"><FaBold /></button>
-                <button type="button" className="hover:text-black"><FaItalic /></button>
-                <button type="button" className="hover:text-black"><FaStrikethrough /></button>
-                <button type="button" className="hover:text-black font-serif font-bold">&lt;&gt;</button>
-                <button type="button" className="hover:text-black"><FaCode /></button>
-                <button type="button" className="hover:text-black"><FaLink /></button>
-                <button type="button" className="hover:text-black"><FaListUl /></button>
-                <button type="button" className="hover:text-black font-semibold text-[10px]">1<br />2</button>
-                <button type="button" className="hover:text-black"><FaImage /></button>
-              </div>
-              <textarea
-                rows="6"
+            {/* Real React Quill Editor */}
+            <div className="border border-gray-300 rounded-md overflow-hidden bg-white focus-within:border-[#32c943] focus-within:ring-1 focus-within:ring-[#32c943] transition-all">
+              <ReactQuill
+                theme="snow"
                 value={taskData.description}
-                onChange={(e) => setTaskData({ ...taskData, description: e.target.value })}
-                className="w-full p-4 focus:outline-none text-sm resize-y"
-              ></textarea>
+                onChange={(content) => setTaskData({ ...taskData, description: content })}
+                modules={quillModules}
+                formats={quillFormats}
+                placeholder="Write task description..."
+              />
             </div>
 
             {/* People Section */}
@@ -196,7 +262,7 @@ function Tasks() {
                     className="w-2/3 px-3 py-1.5 border border-gray-300 rounded bg-white text-gray-500 focus:outline-none"
                   >
                     <option value="">Type to search</option>
-                    {users.map(u => (
+                    {users.filter(u => u.role !== 'Admin').map(u => (
                       <option key={u.email} value={u.fullName}>{u.fullName}</option>
                     ))}
                   </select>
@@ -222,7 +288,7 @@ function Tasks() {
               <h3 className="text-xs font-bold text-gray-700 tracking-wider mb-4 pb-2 border-b border-gray-200">ESTIMATES AND TIME</h3>
               <div className="max-w-md space-y-4 text-sm">
                 <div className="flex items-center">
-                  <label className="w-1/3 font-semibold text-gray-800">Estimated time</label>
+                  <label className="w-1/3 font-semibold text-gray-800">Estimated time(Hrs)</label>
                   <input
                     type="number"
                     value={taskData.estimatedTime}
@@ -286,30 +352,6 @@ function Tasks() {
                     className="w-2/3 px-3 py-1.5 border border-gray-300 rounded bg-white focus:outline-none"
                   />
                 </div>
-                {/* <div className="flex items-center">
-                  <label className="w-1/3 font-semibold text-gray-800">Category</label>
-                  <select
-                    value={taskData.category}
-                    onChange={(e) => setTaskData({ ...taskData, category: e.target.value })}
-                    className="w-2/3 px-3 py-1.5 border border-gray-300 rounded bg-white text-gray-500 focus:outline-none"
-                  >
-                    <option value=""></option>
-                    <option value="Development">Development</option>
-                    <option value="Design">Design</option>
-                  </select>
-                </div> */}
-                {/* <div className="flex items-center">
-                  <label className="w-1/3 font-semibold text-gray-800">Version</label>
-                  <select
-                    value={taskData.version}
-                    onChange={(e) => setTaskData({ ...taskData, version: e.target.value })}
-                    className="w-2/3 px-3 py-1.5 border border-gray-300 rounded bg-white text-gray-500 focus:outline-none"
-                  >
-                    <option value=""></option>
-                    <option value="v1.0">v1.0</option>
-                    <option value="v2.0">v2.0</option>
-                  </select>
-                </div> */}
                 <div className="flex items-center">
                   <label className="w-1/3 font-semibold text-gray-800 text-[#0b64a3]">Priority *</label>
                   <select
@@ -323,43 +365,23 @@ function Tasks() {
                     <option value="Low">Low</option>
                   </select>
                 </div>
-              </div>
-            </div>
-
-            {/* Other & Costs (Optional structure from image) */}
-            {/* <div>
-              <h3 className="text-xs font-bold text-gray-700 tracking-wider mb-4 pb-2 border-b border-gray-200">OTHER</h3>
-            </div>
-            <div>
-              <h3 className="text-xs font-bold text-gray-700 tracking-wider mb-4 pb-2 border-b border-gray-200">COSTS</h3>
-              <div className="max-w-md space-y-4 text-sm">
                 <div className="flex items-center">
-                  <label className="w-1/3 font-semibold text-gray-800">Budget</label>
+                  <label className="w-1/3 font-semibold text-gray-800 text-[#0b64a3]">Status *</label>
                   <select
-                    value={taskData.budget}
-                    onChange={(e) => setTaskData({ ...taskData, budget: e.target.value })}
-                    className="w-2/3 px-3 py-1.5 border border-gray-300 rounded bg-white text-gray-500 focus:outline-none"
+                    value={taskData.status}
+                    onChange={(e) => setTaskData({ ...taskData, status: e.target.value })}
+                    className="w-2/3 px-3 py-1.5 border border-gray-300 rounded bg-white text-gray-800 focus:outline-none"
+                    required
                   >
-                    <option value=""></option>
-                    <option value="$1,000">$1,000</option>
-                    <option value="$5,000">$5,000</option>
+                    <option value="New">New</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="In Review">In Review</option>
+                    <option value="Reviewed">Reviewed</option>
                   </select>
                 </div>
               </div>
-            </div> */}
-
-            {/* Attachments */}
-            {/* <div>
-              <h3 className="text-xs font-bold text-gray-700 tracking-wider mb-4 pb-2 border-b border-gray-200">ATTACHMENTS</h3>
-              <div className="border-2 border-dashed border-gray-300 bg-gray-50 rounded-sm flex flex-col items-center justify-center p-8 text-gray-500 hover:bg-gray-100 transition cursor-pointer mb-2">
-                <FaPaperclip className="text-4xl text-gray-400 mb-2" />
-                <span>Drop files here or click to attach files.</span>
-              </div>
-              <button type="button" className="text-[#0b64a3] text-sm flex items-center space-x-1 hover:underline">
-                <FaPaperclip size={12} />
-                <span>Attach files</span>
-              </button>
-            </div> */}
+            </div>
 
             {/* Action Buttons */}
             <div className="flex space-x-4 pt-6">
@@ -431,6 +453,20 @@ function Tasks() {
             <option value="Low">Low</option>
           </select>
         </div>
+        <div className="flex-1 min-w-[200px]">
+          <select
+            value={searchQuery.status}
+            onChange={(e) => setSearchQuery({ ...searchQuery, status: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-300 rounded text-sm text-gray-500 focus:outline-none focus:border-[#1a2b4c] bg-white"
+          >
+            <option value="">Status</option>
+            <option value="New">New</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+            <option value="In Review">In Review</option>
+            <option value="Reviewed">Reviewed</option>
+          </select>
+        </div>
         <div>
           <button
             onClick={() => {
@@ -451,13 +487,28 @@ function Tasks() {
           <table className="w-full text-left text-sm text-gray-600">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="px-6 py-4 font-semibold text-[#1a2b4c]">ID</th>
-                <th className="px-6 py-4 font-semibold text-[#1a2b4c]">Task Name</th>
-                <th className="px-6 py-4 font-semibold text-[#1a2b4c]">Assignee</th>
-                <th className="px-6 py-4 font-semibold text-[#1a2b4c]">Priority</th>
-                <th className="px-6 py-4 font-semibold text-[#1a2b4c]">Est. Time</th>
-                <th className="px-6 py-4 font-semibold text-[#1a2b4c]">Dates</th>
-                <th className="px-6 py-4 font-semibold text-[#1a2b4c] text-center w-32">Actions</th>
+                <th className="px-6 py-4 font-semibold text-[#1a2b4c] cursor-pointer select-none hover:bg-gray-50 transition-colors" onClick={() => handleSort('id')}>
+                  ID {renderSortIcon('id')}
+                </th>
+                <th className="px-6 py-4 font-semibold text-[#1a2b4c] cursor-pointer select-none hover:bg-gray-50 transition-colors" onClick={() => handleSort('name')}>
+                  Task Name {renderSortIcon('name')}
+                </th>
+                <th className="px-6 py-4 font-semibold text-[#1a2b4c] cursor-pointer select-none hover:bg-gray-50 transition-colors" onClick={() => handleSort('assignee')}>
+                  Assignee {renderSortIcon('assignee')}
+                </th>
+                <th className="px-6 py-4 font-semibold text-[#1a2b4c] cursor-pointer select-none hover:bg-gray-50 transition-colors" onClick={() => handleSort('priority')}>
+                  Priority {renderSortIcon('priority')}
+                </th>
+                <th className="px-6 py-4 font-semibold text-[#1a2b4c] cursor-pointer select-none hover:bg-gray-50 transition-colors" onClick={() => handleSort('status')}>
+                  Status {renderSortIcon('status')}
+                </th>
+                <th className="px-6 py-4 font-semibold text-[#1a2b4c] cursor-pointer select-none hover:bg-gray-50 transition-colors" onClick={() => handleSort('estimatedTime')}>
+                  Est. Time {renderSortIcon('estimatedTime')}
+                </th>
+                <th className="px-6 py-4 font-semibold text-[#1a2b4c] cursor-pointer select-none hover:bg-gray-50 transition-colors" onClick={() => handleSort('startDate')}>
+                  Dates {renderSortIcon('startDate')}
+                </th>
+                <th className="px-6 py-4 font-semibold text-[#1a2b4c] text-center w-32 select-none">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -467,19 +518,118 @@ function Tasks() {
                   <td className="px-6 py-4 font-medium text-gray-800">{task.name}</td>
                   <td className="px-6 py-4">{task.assignee || '-'}</td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-xs rounded-full ${task.priority === 'High' ? 'bg-red-100 text-red-700' : task.priority === 'Low' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                    <span className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-full border ${task.priority === 'High' ? 'bg-red-50 text-red-700 border-red-200' : task.priority === 'Low' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
                       {task.priority || 'Normal'}
                     </span>
                   </td>
-                  <td className="px-6 py-4">{task.estimatedTime ? `${task.estimatedTime}h` : '-'}</td>
-                  <td className="px-6 py-4 text-xs text-gray-500">
-                    {task.startDate || task.endDate ? (
-                      <>
-                        {task.startDate || 'none'} - {task.endDate || 'none'}
-                      </>
-                    ) : '-'}
+                  <td className="px-6 py-4">
+                    {inlineEdit.taskId === task.id && inlineEdit.field === 'status' ? (
+                      <select
+                        value={task.status || "New"}
+                        onChange={(e) => {
+                          dispatch(updateTask({ ...task, status: e.target.value }));
+                          setInlineEdit({ taskId: null, field: null });
+                          toast.success("Status updated inline");
+                        }}
+                        onBlur={() => setInlineEdit({ taskId: null, field: null })}
+                        autoFocus
+                        className="px-2 py-1 text-xs border border-gray-300 rounded bg-white text-gray-800 focus:outline-none shadow-sm"
+                      >
+                        <option value="New">New</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                        <option value="In Review">In Review</option>
+                        <option value="Reviewed">Reviewed</option>
+                      </select>
+                    ) : (
+                      <span
+                        onClick={() => setInlineEdit({ taskId: task.id, field: 'status' })}
+                        className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-full border cursor-pointer hover:opacity-80 transition-opacity ${task.status === 'In Progress' ? 'bg-amber-50 text-amber-700 border-amber-200' : task.status === 'In Review' ? 'bg-purple-50 text-purple-700 border-purple-200' : task.status === 'Reviewed' ? 'bg-teal-50 text-teal-700 border-teal-200' : task.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}
+                        title="Click to edit status"
+                      >
+                        {task.status || 'New'}
+                      </span>
+                    )}
                   </td>
-                  <td className="px-6 py-4 flex justify-center space-x-4">
+                  <td className="px-6 py-4">
+                    {inlineEdit.taskId === task.id && inlineEdit.field === 'estimatedTime' ? (
+                      <div className="flex items-center space-x-1">
+                        <input
+                          type="number"
+                          defaultValue={task.estimatedTime}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              dispatch(updateTask({ ...task, estimatedTime: e.target.value }));
+                              setInlineEdit({ taskId: null, field: null });
+                              toast.success("Estimated time updated inline");
+                            } else if (e.key === 'Escape') {
+                              setInlineEdit({ taskId: null, field: null });
+                            }
+                          }}
+                          onBlur={(e) => {
+                            dispatch(updateTask({ ...task, estimatedTime: e.target.value }));
+                            setInlineEdit({ taskId: null, field: null });
+                          }}
+                          autoFocus
+                          className="w-16 px-1.5 py-0.5 border border-gray-300 rounded bg-white text-sm focus:outline-none focus:border-[#1a2b4c]"
+                        />
+                        <span className="text-xs text-gray-500">h</span>
+                      </div>
+                    ) : (
+                      <span
+                        onClick={() => setInlineEdit({ taskId: task.id, field: 'estimatedTime' })}
+                        className="cursor-pointer hover:text-[#1a2b4c] hover:underline decoration-dotted transition"
+                        title="Click to edit hours"
+                      >
+                        {task.estimatedTime ? `${task.estimatedTime}h` : '-'}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-xs text-gray-500">
+                    {inlineEdit.taskId === task.id && inlineEdit.field === 'dates' ? (
+                      <div
+                        className="flex flex-col space-y-1"
+                        onBlur={(e) => {
+                          if (!e.currentTarget.contains(e.relatedTarget)) {
+                            setInlineEdit({ taskId: null, field: null });
+                            toast.success("Dates updated inline");
+                          }
+                        }}
+                      >
+                        <input
+                          type="date"
+                          value={task.startDate || ""}
+                          onChange={(e) => {
+                            dispatch(updateTask({ ...task, startDate: e.target.value }));
+                          }}
+                          className="px-1 py-0.5 text-xs border border-gray-300 rounded bg-white focus:outline-none"
+                          title="Start Date"
+                        />
+                        <input
+                          type="date"
+                          value={task.endDate || ""}
+                          onChange={(e) => {
+                            dispatch(updateTask({ ...task, endDate: e.target.value }));
+                          }}
+                          className="px-1 py-0.5 text-xs border border-gray-300 rounded bg-white focus:outline-none"
+                          title="End Date"
+                        />
+                      </div>
+                    ) : (
+                      <span
+                        onClick={() => setInlineEdit({ taskId: task.id, field: 'dates' })}
+                        className="cursor-pointer hover:text-[#1a2b4c] hover:underline decoration-dotted transition block"
+                        title="Click to edit dates"
+                      >
+                        {task.startDate || task.endDate ? (
+                          <>
+                            {task.startDate || 'none'} - {task.endDate || 'none'}
+                          </>
+                        ) : '-'}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 flex items-center justify-center space-x-4">
                     <button onClick={() => handleEditTask(task)} className="text-[#1a2b4c] hover:text-[#263f6e] transition-colors"><FaEdit size={16} /></button>
                     <button onClick={() => handleDeleteTask(task)} className="text-red-500 hover:text-red-600 transition-colors"><FaTrash size={15} /></button>
                   </td>
@@ -487,7 +637,7 @@ function Tasks() {
               ))}
               {filteredTasks.length === 0 && (
                 <tr>
-                  <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan="8" className="px-6 py-8 text-center text-gray-500">
                     No tasks found.
                   </td>
                 </tr>
