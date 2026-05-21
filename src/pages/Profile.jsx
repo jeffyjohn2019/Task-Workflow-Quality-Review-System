@@ -8,7 +8,6 @@ function Profile() {
   const loggedInState = useSelector((state) => state.auth.loggedInUser);
   const users = useSelector((state) => state.auth.users);
 
-  // Fallback to first user in list if state is cleared after a page reload
   const loggedInUser = loggedInState || users[0];
   const dispatch = useDispatch();
 

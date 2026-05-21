@@ -22,7 +22,7 @@ function ReviewerDashboard() {
             <div className="bg-gradient-to-br from-purple-700 to-purple-900 rounded-2xl p-6 text-white relative overflow-hidden shadow-lg">
                 <div className="relative z-10">
                     <h2 className="text-2xl font-bold mb-1">Review Dashboard</h2>
-                    <p className="text-white/60 text-sm">Manage and review submitted task work</p>
+                    {/* <p className="text-white/60 text-sm">Manage and review submitted task work</p> */}
                 </div>
                 <FaClipboardCheck className="absolute right-6 top-1/2 -translate-y-1/2 text-6xl text-white/10" />
                 <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/5 rounded-full" />

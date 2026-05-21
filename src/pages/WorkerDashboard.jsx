@@ -38,8 +38,8 @@ function WorkerDashboard() {
             {/* Welcome Header */}
             <div className="bg-gradient-to-br from-[#1a2b4c] to-[#2a4a7f] rounded-2xl p-6 text-white relative overflow-hidden shadow-lg">
                 <div className="relative z-10">
-                    <h2 className="text-2xl font-bold mb-1">Welcome back, {loggedInUser?.fullName || "Worker"} 👋</h2>
-                    <p className="text-white/60 text-sm">Here's your task overview for today</p>
+                    <h2 className="text-2xl font-bold mb-1">Welcome back, {loggedInUser?.fullName || "Worker"} </h2>
+                    {/* <p className="text-white/60 text-sm">Here's your task overview for today</p> */}
                 </div>
                 <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/5 rounded-full" />
                 <div className="absolute top-4 right-8 w-20 h-20 bg-white/5 rounded-full" />

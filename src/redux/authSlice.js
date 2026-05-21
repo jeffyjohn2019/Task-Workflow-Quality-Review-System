@@ -12,9 +12,9 @@ const authSlice = createSlice({
                 password: "admin123"
             },
             {
-                fullName: "John Doe",
-                username: "johndoe",
-                email: "john@example.com",
+                fullName: "Jeffy",
+                username: "jeffy",
+                email: "jeffy@example.com",
                 role: "Worker",
                 password: "user123"
             },
@@ -27,7 +27,7 @@ const authSlice = createSlice({
             },
             {
                 fullName: "Alex Reviewer",
-                username: "alexreviewer",
+                username: "reviewer",
                 email: "alex@example.com",
                 role: "Reviewer",
                 password: "user123"

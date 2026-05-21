@@ -29,11 +29,11 @@ function DashboardLayout() {
       case "Admin":
         return (
           <>
-            <NavLink to="/dashboard" className={menuClass}>Dashboard</NavLink>
             <NavLink to="/admin-dashboard" className={menuClass}>Admin Panel</NavLink>
             <NavLink to="/tasks" className={menuClass}>Tasks</NavLink>
             <NavLink to="/users" className={menuClass}>Users</NavLink>
             <NavLink to="/profile" className={menuClass}>Profile</NavLink>
+            <NavLink to="/dashboard" className={menuClass}>Reports</NavLink>
           </>
         );
       case "Worker":
@@ -64,9 +64,9 @@ function DashboardLayout() {
 
   const roleBadge = role ? (
     <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${role === "Admin" ? "bg-amber-500/20 text-amber-300" :
-        role === "Worker" ? "bg-blue-500/20 text-blue-300" :
-          role === "Reviewer" ? "bg-purple-500/20 text-purple-300" :
-            "bg-gray-500/20 text-gray-300"
+      role === "Worker" ? "bg-blue-500/20 text-blue-300" :
+        role === "Reviewer" ? "bg-purple-500/20 text-purple-300" :
+          "bg-gray-500/20 text-gray-300"
       }`}>
       {role}
     </span>

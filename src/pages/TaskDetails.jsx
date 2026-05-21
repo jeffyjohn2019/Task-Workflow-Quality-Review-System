@@ -126,7 +126,7 @@ function TaskDetails() {
             {/* Review Feedback (if previously rejected) */}
             {task.reviewFeedback && task.status === "In Progress" && (
                 <div className="bg-amber-50 rounded-2xl border border-amber-200 p-6">
-                    <h3 className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2">⚠️ Reviewer Feedback</h3>
+                    <h3 className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2">Reviewer Feedback</h3>
                     <p className="text-sm text-amber-800">{task.reviewFeedback}</p>
                 </div>
             )}
@@ -134,7 +134,7 @@ function TaskDetails() {
             {/* Submission Content (if already submitted) */}
             {task.submission && (
                 <div className="bg-purple-50 rounded-2xl border border-purple-200 p-6">
-                    <h3 className="text-xs font-bold text-purple-700 uppercase tracking-wider mb-2">📝 Your Submission</h3>
+                    <h3 className="text-xs font-bold text-purple-700 uppercase tracking-wider mb-2">Your Submission</h3>
                     <p className="text-sm text-purple-800 whitespace-pre-wrap">{task.submission}</p>
                 </div>
             )}

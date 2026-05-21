@@ -105,8 +105,14 @@ function Login() {
       username: "",
       password: "",
     });
-
-    navigate("/dashboard");
+    console.log("userFound ", userFound)
+    if (userFound.role === 'Admin') {
+      navigate("/admin-dashboard");
+    } else if (userFound.role === 'Worker') {
+      navigate("/worker-dashboard");
+    } else if (userFound.role === 'Reviewer') {
+      navigate("/reviewer-dashboard");
+    }
   };
 
   // SIGNUP SUBMIT
@@ -199,7 +205,7 @@ function Login() {
                     setErrors({ ...errors, password: "" });
                   }}
                   className="w-full py-[10px] text-sm bg-transparent text-black placeholder-gray-500 focus:outline-none pr-10 tracking-[0.2em]"
-                  placeholder="••••••••"
+                  placeholder=""
                 />
                 <button
                   type="button"
@@ -222,27 +228,6 @@ function Login() {
             >
               LOGIN
             </button>
-
-            {/* Switch to Signup */}
-            {/* <p className="text-center text-sm text-gray-400 mt-6 tracking-wide">
-              Don’t have an account?{" "}
-              <span
-                className="text-cyan-400 font-semibold cursor-pointer hover:underline hover:text-cyan-300 transition-colors"
-                onClick={() => {
-                  setIsSignup(true);
-                  setErrors({});
-                  setShowPasswordRegister(false);
-                  setSignupData({
-                    fullName: "",
-                    email: "",
-                    role: "",
-                    password: "",
-                  });
-                }}
-              >
-                Sign Up
-              </span>
-            </p> */}
           </form>
         )}
 
