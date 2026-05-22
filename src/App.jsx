@@ -18,6 +18,12 @@ import ReviewPanel from './pages/ReviewPanel';
 function App() {
   const router = createBrowserRouter([
     {
+      path: "/",
+      element: (
+        <Login />
+      ),
+    },
+    {
       path: "/login",
       element: (
         <PublicRoute>
@@ -44,12 +50,7 @@ function App() {
         { path: "review-panel/:taskId", element: (<ReviewPanel />) },
       ]
     },
-    {
-      path: "/",
-      element: (
-        <Login />
-      ),
-    },
+
   ]);
 
   return <RouterProvider router={router}></RouterProvider>
