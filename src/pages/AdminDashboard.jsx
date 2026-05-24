@@ -1,23 +1,31 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { FaTasks, FaHourglassHalf, FaSearch, FaClipboardCheck, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
 
 function AdminDashboard() {
     const tasks = useSelector((state) => state.tasks.tasks);
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
-
-    const totalTasks = tasks.length;
-    const pendingTasks = tasks.filter(t => t.status === "New" || t.status === "In Progress").length;
-    const inReviewTasks = tasks.filter(t => t.status === "In Review").length;
-    const completedTasks = tasks.filter(t => t.status === "Completed" || t.status === "Reviewed").length;
-    const blockedTasks = tasks.filter(t => t.priority === "High" && t.status !== "Completed" && t.status !== "Reviewed").length;
 
     const filteredTasks = tasks.filter((task) => {
         const matchSearch = task.name?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchStatus = statusFilter ? task.status === statusFilter : true;
         return matchSearch && matchStatus;
     });
+
+    const totalTasks = filteredTasks.length;
+    const pendingTasks = filteredTasks.filter(t => t.status === "New" || t.status === "In Progress").length;
+    const inReviewTasks = filteredTasks.filter(t => t.status === "In Review").length;
+    const completedTasks = filteredTasks.filter(t => t.status === "Completed" || t.status === "Reviewed").length;
+    const rejectedTasks = filteredTasks.filter(t => t.status === "Rejected").length;
+    const blockedTasks = filteredTasks.filter(t => t.priority === "High" && t.status !== "Completed" && t.status !== "Reviewed").length;
+
+    // Metric Calculations
+    const reviewedCount = completedTasks + rejectedTasks;
+    const accuracy = reviewedCount > 0 ? Math.round((completedTasks / reviewedCount) * 100) : 0;
+    const productivity = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
     const priorityBadge = (priority) => {
         const styles = {
@@ -35,6 +43,7 @@ function AdminDashboard() {
             "In Review": "bg-purple-500/10 text-purple-400 border-purple-500/20",
             Reviewed: "bg-teal-500/10 text-teal-400 border-teal-500/20",
             Completed: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+            Rejected: "bg-red-500/10 text-red-500 border-red-500/20",
         };
         return styles[status] || styles.New;
     };
@@ -44,13 +53,15 @@ function AdminDashboard() {
         { label: "Pending", value: pendingTasks, icon: FaHourglassHalf, bg: "from-[#757575] to-[#9e9e9e]" },
         { label: "In Review", value: inReviewTasks, icon: FaClipboardCheck, bg: "from-[#FF9800] to-[#FFB74D]" },
         { label: "Completed", value: completedTasks, icon: FaCheckCircle, bg: "from-[#4CAF50] to-[#81C784]" },
+        { label: "Accuracy", value: `${accuracy}%`, icon: FaClipboardCheck, bg: "from-[#3F51B5] to-[#7986CB]" },
+        { label: "Productivity", value: `${productivity}%`, icon: FaHourglassHalf, bg: "from-[#009688] to-[#4DB6AC]" },
         { label: "Blocked", value: blockedTasks, icon: FaExclamationTriangle, bg: "from-[#e31a4c] to-[#ef5350]" },
     ];
 
     return (
         <div className="space-y-6">
             {/* Stat Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
                 {statCards.map((card) => (
                     <div
                         key={card.label}
@@ -91,6 +102,7 @@ function AdminDashboard() {
                         <option value="In Review">In Review</option>
                         <option value="Reviewed">Reviewed</option>
                         <option value="Completed">Completed</option>
+                        <option value="Rejected">Rejected</option>
                     </select>
                 </div>
             </div>
@@ -107,17 +119,23 @@ function AdminDashboard() {
                                 <th className="px-6 py-3.5 font-semibold text-[#1a2b4c] text-xs uppercase tracking-wider">ID</th>
                                 <th className="px-6 py-3.5 font-semibold text-[#1a2b4c] text-xs uppercase tracking-wider">Task Name</th>
                                 <th className="px-6 py-3.5 font-semibold text-[#1a2b4c] text-xs uppercase tracking-wider">Assignee</th>
+                                <th className="px-6 py-3.5 font-semibold text-[#1a2b4c] text-xs uppercase tracking-wider">Reviewer</th>
                                 <th className="px-6 py-3.5 font-semibold text-[#1a2b4c] text-xs uppercase tracking-wider">Priority</th>
                                 <th className="px-6 py-3.5 font-semibold text-[#1a2b4c] text-xs uppercase tracking-wider">Status</th>
                                 <th className="px-6 py-3.5 font-semibold text-[#1a2b4c] text-xs uppercase tracking-wider">Deadline</th>
+                                <th className="px-6 py-3.5 font-semibold text-[#1a2b4c] text-xs uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredTasks.map((task) => (
-                                <tr key={task.id} className="border-b border-gray-50 hover:bg-[#f8f9ff] transition-colors duration-150">
+                                <tr
+                                    key={task.id}
+                                    className="border-b border-gray-50 hover:bg-[#f8f9ff] transition-colors duration-150 cursor-pointer"
+                                >
                                     <td className="px-6 py-4 text-xs font-mono text-gray-400">#{task.id.toString().slice(-4)}</td>
                                     <td className="px-6 py-4 font-medium text-gray-800">{task.name}</td>
                                     <td className="px-6 py-4 text-gray-600">{task.assignee || "—"}</td>
+                                    <td className="px-6 py-4 text-gray-600">{task.reviewer || "—"}</td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2.5 py-1 text-[11px] font-semibold rounded-full border ${priorityBadge(task.priority)}`}>
                                             {task.priority || "Normal"}
@@ -129,6 +147,17 @@ function AdminDashboard() {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-xs text-gray-500">{task.endDate || "—"}</td>
+                                    <td className="px-6 py-4 text-center">
+                                        {task.status === 'Reviewed' &&
+                                            <button
+                                                onClick={() => navigate(`/task-details/${task.id}`)}
+                                                className="text-[#0b64a3] hover:text-[#094d7d] font-semibold text-xs tracking-wide bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded transition"
+                                            >
+                                                VIEW
+                                            </button>
+                                        }
+
+                                    </td>
                                 </tr>
                             ))}
                             {filteredTasks.length === 0 && (

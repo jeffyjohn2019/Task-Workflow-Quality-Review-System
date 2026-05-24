@@ -52,6 +52,7 @@ function TaskDetails() {
         "In Review": "bg-purple-500/10 text-purple-500 border-purple-500/20",
         Reviewed: "bg-teal-500/10 text-teal-500 border-teal-500/20",
         Completed: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+        Rejected: "bg-red-500/10 text-red-500 border-red-500/20",
     };
 
     const ps = priorityStyles[task.priority] || priorityStyles.Normal;
@@ -83,6 +84,11 @@ function TaskDetails() {
                             <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${statusStyles[task.status] || statusStyles.New}`}>
                                 {task.status}
                             </span>
+                            {task.isLateSubmission && (
+                                <span className={`px-3 py-1 text-xs font-semibold rounded-full border bg-red-500/10 text-red-500 border-red-500/20`}>
+                                    Late Submission
+                                </span>
+                            )}
                         </div>
                     </div>
 

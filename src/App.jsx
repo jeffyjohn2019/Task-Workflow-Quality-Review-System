@@ -14,6 +14,7 @@ import WorkerDashboard from './pages/WorkerDashboard';
 import TaskDetails from './pages/TaskDetails';
 import ReviewerDashboard from './pages/ReviewerDashboard';
 import ReviewPanel from './pages/ReviewPanel';
+import AdminTaskReviews from './pages/AdminTaskReviews';
 
 function App() {
   const router = createBrowserRouter([
@@ -48,6 +49,7 @@ function App() {
         { path: "task-details/:taskId", element: (<TaskDetails />) },
         { path: "reviewer-dashboard", element: (<ReviewerDashboard />) },
         { path: "review-panel/:taskId", element: (<ReviewPanel />) },
+        { path: "admin-reviews", element: (<AdminTaskReviews />) },
       ]
     },
 

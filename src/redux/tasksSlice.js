@@ -9,6 +9,7 @@ const tasksSlice = createSlice({
                 name: "Set up Task Quality Review workflow",
                 description: "Initial task to configure review gates, thresholds, and role assignments for the QA board.",
                 assignee: "John Doe",
+                reviewer: "Alex Reviewer",
                 priority: "High",
                 estimatedTime: "8",
                 startDate: "2026-05-20",
@@ -24,7 +25,8 @@ const tasksSlice = createSlice({
                 id: "1002",
                 name: "Design dashboard wireframes",
                 description: "Create wireframes for admin, worker and reviewer dashboards with modern card-based layouts.",
-                assignee: "John Doe",
+                assignee: "Jeffy",
+                reviewer: "Albin Reviewer",
                 priority: "Normal",
                 estimatedTime: "5",
                 startDate: "2026-05-18",
@@ -41,6 +43,7 @@ const tasksSlice = createSlice({
                 name: "Implement API endpoints",
                 description: "Build RESTful API endpoints for task CRUD operations, user authentication, and review submissions.",
                 assignee: "Jane Smith",
+                reviewer: "Albin Reviewer",
                 priority: "High",
                 estimatedTime: "12",
                 startDate: "2026-05-19",
@@ -57,6 +60,7 @@ const tasksSlice = createSlice({
                 name: "Write unit tests for auth module",
                 description: "Complete unit test coverage for the authentication module including login, register, and token validation.",
                 assignee: "Jane Smith",
+                reviewer: "Alex Reviewer",
                 priority: "Low",
                 estimatedTime: "4",
                 startDate: "2026-05-15",
@@ -72,7 +76,8 @@ const tasksSlice = createSlice({
                 id: "1005",
                 name: "Database schema optimization",
                 description: "Optimize database queries and add proper indexing for the tasks and reviews collections.",
-                assignee: "John Doe",
+                assignee: "Jeffy",
+                reviewer: "Alex Reviewer",
                 priority: "Normal",
                 estimatedTime: "6",
                 startDate: "2026-05-21",
@@ -112,6 +117,15 @@ const tasksSlice = createSlice({
                 state.tasks[index].submission = action.payload.submission;
                 state.tasks[index].status = "In Review";
                 state.tasks[index].progress = 100;
+
+                if (state.tasks[index].endDate) {
+                    const endDate = new Date(state.tasks[index].endDate);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    if (today > endDate) {
+                        state.tasks[index].isLateSubmission = true;
+                    }
+                }
             }
         },
         reviewTask: (state, action) => {
@@ -120,7 +134,7 @@ const tasksSlice = createSlice({
             if (index !== -1) {
                 state.tasks[index].reviewFeedback = feedback;
                 state.tasks[index].reviewChecklist = checklist;
-                state.tasks[index].status = approved ? "Reviewed" : "In Progress";
+                state.tasks[index].status = approved ? "Reviewed" : "Rejected";
                 if (!approved) {
                     state.tasks[index].progress = 50;
                     state.tasks[index].submission = "";

@@ -1,137 +1,185 @@
-import React from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { FaClock, FaFlag, FaCalendarAlt, FaArrowRight, FaClipboardList } from "react-icons/fa";
+import { FaTasks, FaHourglassHalf, FaSearch, FaClipboardCheck, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
 
 function WorkerDashboard() {
-    const loggedInUser = useSelector((state) => state.auth.loggedInUser);
     const tasks = useSelector((state) => state.tasks.tasks);
+    const loggedInUser = useSelector((state) => state.auth.loggedInUser);
     const navigate = useNavigate();
 
-    const myTasks = tasks.filter(
-        (t) => t.assignee === loggedInUser?.fullName
-    );
+    const [searchTerm, setSearchTerm] = useState("");
+    const [statusFilter, setStatusFilter] = useState("");
 
-    const priorityColor = (p) => ({
-        High: { badge: "bg-red-500/10 text-red-400 border-red-500/20", bar: "bg-red-500" },
-        Normal: { badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", bar: "bg-emerald-500" },
-        Low: { badge: "bg-sky-500/10 text-sky-400 border-sky-500/20", bar: "bg-sky-500" },
-    }[p] || { badge: "bg-gray-500/10 text-gray-400 border-gray-500/20", bar: "bg-gray-500" });
+    const myTasks = tasks.filter((t) => t.assignee === loggedInUser?.fullName);
 
-    const statusColor = (s) => ({
-        New: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-        "In Progress": "bg-amber-500/10 text-amber-400 border-amber-500/20",
-        "In Review": "bg-purple-500/10 text-purple-400 border-purple-500/20",
-        Reviewed: "bg-teal-500/10 text-teal-400 border-teal-500/20",
-        Completed: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    }[s] || "bg-gray-500/10 text-gray-400 border-gray-500/20");
+    const filteredTasks = myTasks.filter((task) => {
+        const matchSearch = task.name?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchStatus = statusFilter ? task.status === statusFilter : true;
+        return matchSearch && matchStatus;
+    });
 
-    const summary = {
-        total: myTasks.length,
-        inProgress: myTasks.filter(t => t.status === "In Progress").length,
-        inReview: myTasks.filter(t => t.status === "In Review").length,
-        completed: myTasks.filter(t => t.status === "Reviewed" || t.status === "Completed").length,
+    const totalTasks = filteredTasks.length;
+    const pendingTasks = filteredTasks.filter(t => t.status === "New" || t.status === "In Progress").length;
+    const inReviewTasks = filteredTasks.filter(t => t.status === "In Review").length;
+    const completedTasks = filteredTasks.filter(t => t.status === "Completed" || t.status === "Reviewed").length;
+    const rejectedTasks = filteredTasks.filter(t => t.status === "Rejected").length;
+    const blockedTasks = filteredTasks.filter(t => t.priority === "High" && t.status !== "Completed" && t.status !== "Reviewed").length;
+
+    // Metric Calculations
+    const reviewedCount = completedTasks + rejectedTasks;
+    const accuracy = reviewedCount > 0 ? Math.round((completedTasks / reviewedCount) * 100) : 0;
+    const productivity = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    const priorityBadge = (priority) => {
+        const styles = {
+            High: "bg-red-500/10 text-red-400 border-red-500/20",
+            Normal: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+            Low: "bg-sky-500/10 text-sky-400 border-sky-500/20",
+        };
+        return styles[priority] || styles.Normal;
     };
+
+    const statusBadge = (status) => {
+        const styles = {
+            New: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+            "In Progress": "bg-amber-500/10 text-amber-400 border-amber-500/20",
+            "In Review": "bg-purple-500/10 text-purple-400 border-purple-500/20",
+            Reviewed: "bg-teal-500/10 text-teal-400 border-teal-500/20",
+            Completed: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+            Rejected: "bg-red-500/10 text-red-500 border-red-500/20",
+        };
+        return styles[status] || styles.New;
+    };
+
+    const isOverdue = (endDate, status) => {
+        if (!endDate || status === "Completed" || status === "Reviewed") return false;
+        const end = new Date(endDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return end <= today;
+    };
+
+    const statCards = [
+        { label: "My Tasks", value: totalTasks, icon: FaTasks, bg: "from-[#1a2b4c] to-[#2a4a7f]" },
+        { label: "Pending", value: pendingTasks, icon: FaHourglassHalf, bg: "from-[#757575] to-[#9e9e9e]" },
+        { label: "In Review", value: inReviewTasks, icon: FaClipboardCheck, bg: "from-[#FF9800] to-[#FFB74D]" },
+        { label: "Completed", value: completedTasks, icon: FaCheckCircle, bg: "from-[#4CAF50] to-[#81C784]" },
+        { label: "Accuracy", value: `${accuracy}%`, icon: FaClipboardCheck, bg: "from-[#3F51B5] to-[#7986CB]" },
+        { label: "Productivity", value: `${productivity}%`, icon: FaHourglassHalf, bg: "from-[#009688] to-[#4DB6AC]" },
+        { label: "Blocked", value: blockedTasks, icon: FaExclamationTriangle, bg: "from-[#e31a4c] to-[#ef5350]" },
+    ];
 
     return (
         <div className="space-y-6">
-            {/* Welcome Header */}
-            <div className="bg-gradient-to-br from-[#1a2b4c] to-[#2a4a7f] rounded-2xl p-6 text-white relative overflow-hidden shadow-lg">
-                <div className="relative z-10">
-                    <h2 className="text-2xl font-bold mb-1">Welcome back, {loggedInUser?.fullName || "Worker"} </h2>
-                    {/* <p className="text-white/60 text-sm">Here's your task overview for today</p> */}
-                </div>
-                <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/5 rounded-full" />
-                <div className="absolute top-4 right-8 w-20 h-20 bg-white/5 rounded-full" />
+            {/* Header Message */}
+            <div className="flex justify-between items-center px-2">
+                <h2 className="text-2xl font-bold text-gray-800">Worker Dashboard</h2>
             </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                    { label: "Total", value: summary.total, color: "text-[#1a2b4c]", bg: "bg-[#1a2b4c]/5" },
-                    { label: "In Progress", value: summary.inProgress, color: "text-amber-600", bg: "bg-amber-50" },
-                    { label: "In Review", value: summary.inReview, color: "text-purple-600", bg: "bg-purple-50" },
-                    { label: "Done", value: summary.completed, color: "text-emerald-600", bg: "bg-emerald-50" },
-                ].map((s) => (
-                    <div key={s.label} className={`${s.bg} rounded-xl p-4 text-center`}>
-                        <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-                        <p className="text-xs text-gray-500 mt-1">{s.label}</p>
+            {/* Stat Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+                {statCards.map((card) => (
+                    <div
+                        key={card.label}
+                        className={`bg-gradient-to-br ${card.bg} rounded-2xl p-5 text-white relative overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 group`}
+                    >
+                        <div className="relative z-10">
+                            <p className="text-xs font-semibold uppercase tracking-widest opacity-80 mb-1">{card.label}</p>
+                            <p className="text-3xl font-bold">{card.value}</p>
+                        </div>
+                        <card.icon className="absolute right-4 top-1/2 -translate-y-1/2 text-5xl opacity-20 group-hover:opacity-30 transition-opacity" />
+                        <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-white/10 rounded-full" />
+                        <div className="absolute -top-4 -left-4 w-16 h-16 bg-white/5 rounded-full" />
                     </div>
                 ))}
             </div>
 
-            {/* Task Cards */}
-            <div>
-                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">My Tasks</h3>
-                {myTasks.length === 0 ? (
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-                        <FaClipboardList className="mx-auto text-4xl text-gray-300 mb-3" />
-                        <p className="text-gray-400">No tasks assigned to you yet.</p>
+            {/* Search + Filter Bar */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="relative flex-1">
+                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                        <input
+                            type="text"
+                            placeholder="Search tasks by title..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1a2b4c] focus:ring-1 focus:ring-[#1a2b4c]/20 transition-all bg-gray-50/50"
+                        />
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {myTasks.map((task) => {
-                            const pc = priorityColor(task.priority);
-                            return (
-                                <div
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 focus:outline-none focus:border-[#1a2b4c] bg-gray-50/50 min-w-[160px]"
+                    >
+                        <option value="">All Statuses</option>
+                        <option value="New">New</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="In Review">In Review</option>
+                        <option value="Reviewed">Reviewed</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+            </div>
+
+            {/* Tasks Table */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                    <h3 className="font-semibold text-gray-800">My Assignments <span className="text-gray-400 font-normal text-sm">({filteredTasks.length})</span></h3>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead>
+                            <tr className="border-b border-gray-100">
+                                <th className="px-6 py-3.5 font-semibold text-[#1a2b4c] text-xs uppercase tracking-wider">ID</th>
+                                <th className="px-6 py-3.5 font-semibold text-[#1a2b4c] text-xs uppercase tracking-wider">Task Name</th>
+                                <th className="px-6 py-3.5 font-semibold text-[#1a2b4c] text-xs uppercase tracking-wider">Priority</th>
+                                <th className="px-6 py-3.5 font-semibold text-[#1a2b4c] text-xs uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3.5 font-semibold text-[#1a2b4c] text-xs uppercase tracking-wider">Deadline</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredTasks.map((task) => (
+                                <tr
                                     key={task.id}
                                     onClick={() => navigate(`/task-details/${task.id}`)}
-                                    className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md hover:border-[#1a2b4c]/20 transition-all duration-300 cursor-pointer group relative overflow-hidden"
+                                    className="border-b border-gray-50 hover:bg-[#f8f9ff] transition-colors duration-150 cursor-pointer"
                                 >
-                                    {/* Top accent line */}
-                                    <div className={`absolute top-0 left-0 right-0 h-1 ${pc.bar} opacity-60 group-hover:opacity-100 transition-opacity`} />
-
-                                    <div className="flex items-start justify-between mb-3 pt-1">
-                                        <h4 className="font-semibold text-gray-800 text-sm leading-snug pr-2 group-hover:text-[#1a2b4c] transition-colors line-clamp-2">
-                                            {task.name}
-                                        </h4>
-                                        <FaArrowRight className="text-gray-300 group-hover:text-[#1a2b4c] transition-colors mt-0.5 shrink-0" size={12} />
-                                    </div>
-
-                                    {/* Badges */}
-                                    <div className="flex flex-wrap gap-2 mb-4">
-                                        <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border ${pc.badge}`}>
-                                            <FaFlag className="inline mr-1" size={8} />{task.priority}
+                                    <td className="px-6 py-4 text-xs font-mono text-gray-400">#{task.id.toString().slice(-4)}</td>
+                                    <td className="px-6 py-4 font-medium text-gray-800">{task.name}</td>
+                                    <td className="px-6 py-4">
+                                        <span className={`px-2.5 py-1 text-[11px] font-semibold rounded-full border ${priorityBadge(task.priority)}`}>
+                                            {task.priority || "Normal"}
                                         </span>
-                                        <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border ${statusColor(task.status)}`}>
-                                            {task.status}
-                                        </span>
-                                    </div>
-
-                                    {/* Deadline */}
-                                    {task.endDate && (
-                                        <div className="flex items-center text-xs text-gray-400 mb-3">
-                                            <FaCalendarAlt className="mr-1.5" size={10} />
-                                            <span>Due: {task.endDate}</span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-col gap-1">
+                                            <span className={`px-2.5 py-1 text-[11px] font-semibold rounded-full border ${statusBadge(task.status)} w-fit`}>
+                                                {task.status || "New"}
+                                            </span>
+                                            {task.isLateSubmission && (
+                                                <span className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">
+                                                    Late Submitted
+                                                </span>
+                                            )}
                                         </div>
-                                    )}
-
-                                    {/* Progress Bar */}
-                                    <div>
-                                        <div className="flex justify-between items-center mb-1.5">
-                                            <span className="text-[10px] text-gray-400 uppercase tracking-wider">Progress</span>
-                                            <span className="text-xs font-semibold text-gray-600">{task.progress || 0}%</span>
-                                        </div>
-                                        <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                                            <div
-                                                className={`h-full rounded-full transition-all duration-500 ${pc.bar}`}
-                                                style={{ width: `${task.progress || 0}%` }}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Est Time */}
-                                    {task.estimatedTime && (
-                                        <div className="flex items-center text-xs text-gray-400 mt-3 pt-3 border-t border-gray-50">
-                                            <FaClock className="mr-1.5" size={10} />
-                                            <span>{task.estimatedTime}h estimated</span>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
+                                    </td>
+                                    <td className={`px-6 py-4 text-xs font-semibold ${isOverdue(task.endDate, task.status) ? "text-red-500" : "text-gray-500"}`}>{task.endDate || "—"}</td>
+                                </tr>
+                            ))}
+                            {filteredTasks.length === 0 && (
+                                <tr>
+                                    <td colSpan="5" className="px-6 py-12 text-center text-gray-400">
+                                        <FaTasks className="mx-auto mb-2 text-2xl opacity-40" />
+                                        No tasks found matching your filters.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

@@ -41,6 +41,7 @@ function Tasks() {
     name: "",
     description: "",
     assignee: "",
+    reviewer: "",
     accountable: "",
     estimatedTime: "",
     storyPoints: "",
@@ -58,8 +59,8 @@ function Tasks() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [searchQuery, setSearchQuery] = useState({ name: "", assignee: "", priority: "", status: "" });
-  const [appliedQuery, setAppliedQuery] = useState({ name: "", assignee: "", priority: "", status: "" });
+  const [searchQuery, setSearchQuery] = useState({ name: "", assignee: "", priority: "", status: "", reviewer: "" });
+  const [appliedQuery, setAppliedQuery] = useState({ name: "", assignee: "", priority: "", status: "", reviewer: "" });
 
   // Handle Edit
   const handleEditTask = (task) => {
@@ -67,6 +68,7 @@ function Tasks() {
       name: task.name,
       description: task.description,
       assignee: task.assignee,
+      reviewer: task.reviewer,
       accountable: task.accountable,
       estimatedTime: task.estimatedTime,
       storyPoints: task.storyPoints,
@@ -135,6 +137,7 @@ function Tasks() {
       name: "",
       description: "",
       assignee: "",
+      reviewer: "",
       accountable: "",
       estimatedTime: "",
       storyPoints: "",
@@ -154,9 +157,10 @@ function Tasks() {
   const filteredTasks = tasks.filter((task) => {
     const matchName = task.name?.toLowerCase().includes(appliedQuery.name.toLowerCase()) ?? false;
     const matchAssignee = appliedQuery.assignee ? task.assignee === appliedQuery.assignee : true;
+    const matchReviewer = appliedQuery.reviewer ? task.reviewer === appliedQuery.reviewer : true;
     const matchPriority = appliedQuery.priority ? task.priority === appliedQuery.priority : true;
     const matchStatus = appliedQuery.status ? task.status === appliedQuery.status : true;
-    return matchName && matchAssignee && matchPriority && matchStatus;
+    return matchName && matchAssignee && matchReviewer && matchPriority && matchStatus;
   });
 
   const handleSort = (field) => {
@@ -192,6 +196,9 @@ function Tasks() {
     } else if (sortField === 'assignee') {
       aVal = (a.assignee || "").toLowerCase();
       bVal = (b.assignee || "").toLowerCase();
+    } else if (sortField === 'reviewer') {
+      aVal = (a.reviewer || "").toLowerCase();
+      bVal = (b.reviewer || "").toLowerCase();
     } else if (sortField === 'priority') {
       const priorityRank = { "High": 3, "Normal": 2, "Low": 1 };
       aVal = priorityRank[a.priority] || 0;
@@ -262,7 +269,20 @@ function Tasks() {
                     className="w-2/3 px-3 py-1.5 border border-gray-300 rounded bg-white text-gray-500 focus:outline-none"
                   >
                     <option value="">Type to search</option>
-                    {users.filter(u => u.role !== 'Admin').map(u => (
+                    {users.filter(u => (u.role !== 'Admin' && u.role !== 'Reviewer')).map(u => (
+                      <option key={u.email} value={u.fullName}>{u.fullName}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center mt-4">
+                  <label className="w-1/3 font-semibold text-gray-800">Reviewer</label>
+                  <select
+                    value={taskData.reviewer}
+                    onChange={(e) => setTaskData({ ...taskData, reviewer: e.target.value })}
+                    className="w-2/3 px-3 py-1.5 border border-gray-300 rounded bg-white text-gray-500 focus:outline-none"
+                  >
+                    <option value="">Select Reviewer</option>
+                    {users.filter(u => u.role === 'Reviewer').map(u => (
                       <option key={u.email} value={u.fullName}>{u.fullName}</option>
                     ))}
                   </select>
@@ -375,9 +395,10 @@ function Tasks() {
                   >
                     <option value="New">New</option>
                     <option value="In Progress">In Progress</option>
-                    <option value="Completed">Completed</option>
                     <option value="In Review">In Review</option>
                     <option value="Reviewed">Reviewed</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Rejected">Rejected</option>
                   </select>
                 </div>
               </div>
@@ -443,6 +464,18 @@ function Tasks() {
         </div>
         <div className="flex-1 min-w-[200px]">
           <select
+            value={searchQuery.reviewer}
+            onChange={(e) => setSearchQuery({ ...searchQuery, reviewer: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-300 rounded text-sm text-gray-500 focus:outline-none focus:border-[#1a2b4c] bg-white"
+          >
+            <option value="">Reviewer</option>
+            {users.filter(u => u.role === 'Reviewer').map(u => (
+              <option key={u.email} value={u.fullName}>{u.fullName}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex-1 min-w-[200px]">
+          <select
             value={searchQuery.priority}
             onChange={(e) => setSearchQuery({ ...searchQuery, priority: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded text-sm text-gray-500 focus:outline-none focus:border-[#1a2b4c] bg-white"
@@ -465,6 +498,7 @@ function Tasks() {
             <option value="Completed">Completed</option>
             <option value="In Review">In Review</option>
             <option value="Reviewed">Reviewed</option>
+            <option value="Rejected">Rejected</option>
           </select>
         </div>
         <div>
@@ -496,6 +530,9 @@ function Tasks() {
                 <th className="px-6 py-4 font-semibold text-[#1a2b4c] cursor-pointer select-none hover:bg-gray-50 transition-colors" onClick={() => handleSort('assignee')}>
                   Assignee {renderSortIcon('assignee')}
                 </th>
+                <th className="px-6 py-4 font-semibold text-[#1a2b4c] cursor-pointer select-none hover:bg-gray-50 transition-colors" onClick={() => handleSort('reviewer')}>
+                  Reviewer {renderSortIcon('reviewer')}
+                </th>
                 <th className="px-6 py-4 font-semibold text-[#1a2b4c] cursor-pointer select-none hover:bg-gray-50 transition-colors" onClick={() => handleSort('priority')}>
                   Priority {renderSortIcon('priority')}
                 </th>
@@ -517,6 +554,7 @@ function Tasks() {
                   <td className="px-6 py-4 text-xs font-mono text-gray-400">#{task.id.slice(-4)}</td>
                   <td className="px-6 py-4 font-medium text-gray-800">{task.name}</td>
                   <td className="px-6 py-4">{task.assignee || '-'}</td>
+                  <td className="px-6 py-4">{task.reviewer || '-'}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-full border ${task.priority === 'High' ? 'bg-red-50 text-red-700 border-red-200' : task.priority === 'Low' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
                       {task.priority || 'Normal'}
@@ -540,15 +578,31 @@ function Tasks() {
                         <option value="Completed">Completed</option>
                         <option value="In Review">In Review</option>
                         <option value="Reviewed">Reviewed</option>
+                        <option value="Rejected">Rejected</option>
                       </select>
                     ) : (
-                      <span
-                        onClick={() => setInlineEdit({ taskId: task.id, field: 'status' })}
-                        className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-full border cursor-pointer hover:opacity-80 transition-opacity ${task.status === 'In Progress' ? 'bg-amber-50 text-amber-700 border-amber-200' : task.status === 'In Review' ? 'bg-purple-50 text-purple-700 border-purple-200' : task.status === 'Reviewed' ? 'bg-teal-50 text-teal-700 border-teal-200' : task.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}
-                        title="Click to edit status"
-                      >
-                        {task.status || 'New'}
-                      </span>
+                      (() => {
+                        const statusBadge = (s) => {
+                          const styles = {
+                            New: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+                            "In Progress": "bg-amber-500/10 text-amber-500 border-amber-500/20",
+                            "In Review": "bg-purple-500/10 text-purple-500 border-purple-500/20",
+                            Reviewed: "bg-teal-500/10 text-teal-500 border-teal-500/20",
+                            Completed: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+                            Rejected: "bg-red-500/10 text-red-500 border-red-500/20",
+                          };
+                          return styles[s] || styles.New;
+                        };
+                        return (
+                          <span
+                            onClick={() => setInlineEdit({ taskId: task.id, field: 'status' })}
+                            className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-full border cursor-pointer hover:opacity-80 transition-opacity ${statusBadge(task.status)}`}
+                            title="Click to edit status"
+                          >
+                            {task.status || 'New'}
+                          </span>
+                        );
+                      })()
                     )}
                   </td>
                   <td className="px-6 py-4">
@@ -637,7 +691,7 @@ function Tasks() {
               ))}
               {filteredTasks.length === 0 && (
                 <tr>
-                  <td colSpan="8" className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan="9" className="px-6 py-8 text-center text-gray-500">
                     No tasks found.
                   </td>
                 </tr>

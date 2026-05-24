@@ -32,6 +32,7 @@ function DashboardLayout() {
             <NavLink to="/admin-dashboard" className={menuClass}>Admin Panel</NavLink>
             <NavLink to="/tasks" className={menuClass}>Tasks</NavLink>
             <NavLink to="/users" className={menuClass}>Users</NavLink>
+            <NavLink to="/admin-reviews" className={menuClass}>Task Reviews</NavLink>
             <NavLink to="/profile" className={menuClass}>Profile</NavLink>
             <NavLink to="/dashboard" className={menuClass}>Reports</NavLink>
           </>
