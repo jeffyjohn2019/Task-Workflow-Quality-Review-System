@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { reviewTask } from "../redux/tasksSlice";
 import { toast } from "react-toastify";
 import { FaArrowLeft, FaFlag, FaUserAlt, FaCalendarAlt, FaCheck, FaTimes, FaClipboardCheck } from "react-icons/fa";
+import AIQualityChecker from "../components/AIQualityChecker";
 
 const CHECKLIST_ITEMS = [
     { id: "code_quality", label: "Code Quality & Best Practices" },
@@ -121,6 +122,33 @@ function ReviewPanel() {
                     <p className="text-gray-400 text-sm italic">No submission content available.</p>
                 )}
             </div>
+            {/* AI Quality Checker */}
+            <AIQualityChecker submissionText={task.submission} />
+
+{/* Review Summary */}
+<div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mt-6">
+  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Review Summary</h3>
+  <div className="flex items-center mb-2">
+    <span className="font-semibold mr-2">Status:</span>
+    <span className={statusBadge(task.status)}>{task.status}</span>
+  </div>
+  {task.reviewFeedback && (
+    <div className="mb-2">
+      <p className="font-semibold mb-1">Feedback:</p>
+      <p className="text-sm text-gray-700 whitespace-pre-wrap">{task.reviewFeedback}</p>
+    </div>
+  )}
+  {task.reviewChecklist && task.reviewChecklist.length > 0 && (
+    <div>
+      <p className="font-semibold mb-1">Checklist:</p>
+      <ul className="list-disc list-inside text-sm text-gray-700">
+        {task.reviewChecklist.map((c, i) => (
+          <li key={i}>{c}</li>
+        ))}
+      </ul>
+    </div>
+  )}
+</div>
 
             {/* Quality Checklist */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
