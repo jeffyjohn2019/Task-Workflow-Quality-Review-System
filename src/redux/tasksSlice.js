@@ -13,7 +13,7 @@ const tasksSlice = createSlice({
                 priority: "High",
                 estimatedTime: "8",
                 startDate: "2026-05-20",
-                endDate: "2026-05-27",
+                endDate: "2026-05-26",
                 progress: 20,
                 status: "New",
                 attachments: [],

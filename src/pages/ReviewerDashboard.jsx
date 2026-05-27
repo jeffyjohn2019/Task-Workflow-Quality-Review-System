@@ -137,7 +137,7 @@ function ReviewerDashboard() {
                             {filteredTasks.map((task) => (
                                 <tr
                                     key={task.id}
-                                    onClick={() => navigate(`/task-details/${task.id}`)}
+                                    onClick={() => navigate(`/review-panel/${task.id}`)}
                                     className="border-b border-gray-50 hover:bg-[#f8f9ff] transition-colors duration-150 cursor-pointer"
                                 >
                                     <td className="px-6 py-4 text-xs font-mono text-gray-400">#{task.id.toString().slice(-4)}</td>

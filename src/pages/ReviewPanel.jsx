@@ -14,6 +14,18 @@ const CHECKLIST_ITEMS = [
     { id: "documentation", label: "Documentation Updated" },
 ];
 
+const statusBadge = (status) => {
+    const styles = {
+        New: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+        "In Progress": "bg-amber-500/10 text-amber-400 border-amber-500/20",
+        "In Review": "bg-purple-500/10 text-purple-400 border-purple-500/20",
+        Reviewed: "bg-teal-500/10 text-teal-400 border-teal-500/20",
+        Completed: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+        Rejected: "bg-red-500/10 text-red-500 border-red-500/20",
+    };
+    return `px-2.5 py-1 text-[11px] font-semibold rounded-full border ${styles[status] || styles.New}`;
+};
+
 function ReviewPanel() {
     const { taskId } = useParams();
     const navigate = useNavigate();
@@ -125,100 +137,105 @@ function ReviewPanel() {
             {/* AI Quality Checker */}
             <AIQualityChecker submissionText={task.submission} />
 
-{/* Review Summary */}
-<div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mt-6">
-  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Review Summary</h3>
-  <div className="flex items-center mb-2">
-    <span className="font-semibold mr-2">Status:</span>
-    <span className={statusBadge(task.status)}>{task.status}</span>
-  </div>
-  {task.reviewFeedback && (
-    <div className="mb-2">
-      <p className="font-semibold mb-1">Feedback:</p>
-      <p className="text-sm text-gray-700 whitespace-pre-wrap">{task.reviewFeedback}</p>
-    </div>
-  )}
-  {task.reviewChecklist && task.reviewChecklist.length > 0 && (
-    <div>
-      <p className="font-semibold mb-1">Checklist:</p>
-      <ul className="list-disc list-inside text-sm text-gray-700">
-        {task.reviewChecklist.map((c, i) => (
-          <li key={i}>{c}</li>
-        ))}
-      </ul>
-    </div>
-  )}
-</div>
-
-            {/* Quality Checklist */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Quality Checklist</h3>
-                <div className="space-y-2">
-                    {CHECKLIST_ITEMS.map((item) => {
-                        const isChecked = checklist.includes(item.label);
-                        return (
-                            <label
-                                key={item.id}
-                                className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all duration-200 ${isChecked
-                                        ? "bg-emerald-50 border-emerald-200"
-                                        : "bg-gray-50 border-gray-100 hover:border-gray-200 hover:bg-gray-100/50"
-                                    }`}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={isChecked}
-                                    onChange={() => toggleChecklist(item.label)}
-                                    className="sr-only"
-                                />
-                                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center mr-3 transition-all ${isChecked
-                                        ? "bg-emerald-500 border-emerald-500"
-                                        : "border-gray-300"
-                                    }`}>
-                                    {isChecked && <FaCheck className="text-white" size={10} />}
-                                </div>
-                                <span className={`text-sm ${isChecked ? "text-emerald-700 font-medium" : "text-gray-600"}`}>
-                                    {item.label}
-                                </span>
-                            </label>
-                        );
-                    })}
+            {/* Review Summary */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mt-6">
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Review Summary</h3>
+                <div className="flex items-center mb-2">
+                    <span className="font-semibold mr-2">Status:</span>
+                    <span className={statusBadge(task.status)}>{task.status}</span>
                 </div>
-                <p className="text-[10px] text-gray-400 mt-3">{checklist.length}/{CHECKLIST_ITEMS.length} items checked</p>
+                {task.reviewFeedback && (
+                    <div className="mb-2">
+                        <p className="font-semibold mb-1">Feedback:</p>
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{task.reviewFeedback}</p>
+                    </div>
+                )}
+                {task.reviewChecklist && task.reviewChecklist.length > 0 && (
+                    <div>
+                        <p className="font-semibold mb-1">Checklist:</p>
+                        <ul className="list-disc list-inside text-sm text-gray-700">
+                            {task.reviewChecklist.map((c, i) => (
+                                <li key={i}>{c}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
             </div>
 
-            {/* Feedback */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Reviewer Feedback</h3>
-                <textarea
-                    value={feedback}
-                    onChange={(e) => setFeedback(e.target.value)}
-                    placeholder="Provide detailed feedback on the submission quality, areas of improvement, or any required changes..."
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400/20 transition-all resize-none bg-gray-50/50"
-                />
-            </div>
+            {/* Quality Checklist, Feedback, and Action Buttons (Only if In Review) */}
+            {task.status === "In Review" && (
+                <>
+                    {/* Quality Checklist */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Quality Checklist</h3>
+                        <div className="space-y-2">
+                            {CHECKLIST_ITEMS.map((item) => {
+                                const isChecked = checklist.includes(item.label);
+                                return (
+                                    <label
+                                        key={item.id}
+                                        className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all duration-200 ${isChecked
+                                            ? "bg-emerald-50 border-emerald-200"
+                                            : "bg-gray-50 border-gray-100 hover:border-gray-200 hover:bg-gray-100/50"
+                                            }`}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={isChecked}
+                                            onChange={() => toggleChecklist(item.label)}
+                                            className="sr-only"
+                                        />
+                                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center mr-3 transition-all ${isChecked
+                                            ? "bg-emerald-500 border-emerald-500"
+                                            : "border-gray-300"
+                                            }`}>
+                                            {isChecked && <FaCheck className="text-white" size={10} />}
+                                        </div>
+                                        <span className={`text-sm ${isChecked ? "text-emerald-700 font-medium" : "text-gray-600"}`}>
+                                            {item.label}
+                                        </span>
+                                    </label>
+                                );
+                            })}
+                        </div>
+                        <p className="text-[10px] text-gray-400 mt-3">{checklist.length}/{CHECKLIST_ITEMS.length} items checked</p>
+                    </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-3 pb-6">
-                <button
-                    onClick={handleApprove}
-                    className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-semibold rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg flex items-center"
-                >
-                    <FaCheck className="mr-2" size={12} />Approve
-                </button>
-                <button
-                    onClick={handleReject}
-                    className="px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-semibold rounded-xl hover:from-red-600 hover:to-red-700 transition-all shadow-md hover:shadow-lg flex items-center"
-                >
-                    <FaTimes className="mr-2" size={12} />Reject
-                </button>
-                <button
-                    onClick={() => navigate(-1)}
-                    className="px-8 py-3 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-all"
-                >
-                    Cancel
-                </button>
-            </div>
+                    {/* Feedback */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Reviewer Feedback</h3>
+                        <textarea
+                            value={feedback}
+                            onChange={(e) => setFeedback(e.target.value)}
+                            placeholder="Provide detailed feedback on the submission quality, areas of improvement, or any required changes..."
+                            rows={4}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400/20 transition-all resize-none bg-gray-50/50"
+                        />
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-3 pb-6">
+                        <button
+                            onClick={handleApprove}
+                            className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-semibold rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg flex items-center"
+                        >
+                            <FaCheck className="mr-2" size={12} />Approve
+                        </button>
+                        <button
+                            onClick={handleReject}
+                            className="px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-semibold rounded-xl hover:from-red-600 hover:to-red-700 transition-all shadow-md hover:shadow-lg flex items-center"
+                        >
+                            <FaTimes className="mr-2" size={12} />Reject
+                        </button>
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="px-8 py-3 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-all"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </>
+            )}
         </div>
     );
 }
