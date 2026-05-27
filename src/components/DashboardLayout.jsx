@@ -78,7 +78,7 @@ function DashboardLayout() {
       {/* Sidebar */}
       <aside className="w-44 bg-[#1a2b4c] shadow-lg hidden md:block text-white z-20">
         <div className="p-2 border-b border-[#263f6e] flex items-center justify-center bg-white m-4 rounded-lg shadow">
-          <img src="./src/assets/WorkFlowLogo.png" alt="Workflow Logo" className="h-20 w-25 object-contain" />
+          <img src="../src/assets/WorkFlowLogo.png" alt="Workflow Logo" className="h-20 w-25 object-contain" />
         </div>
 
         <nav className="p-4 space-y-2 mt-4">
